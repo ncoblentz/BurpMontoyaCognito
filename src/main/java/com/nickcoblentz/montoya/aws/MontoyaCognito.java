@@ -6,7 +6,8 @@ import burp.api.montoya.MontoyaApi;
 public class MontoyaCognito implements BurpExtension {
 
     private MontoyaApi _api;
-    private AnnotateCognitoHandler handler;
+    private AnnotateCognitoHandler _handler;
+    private CognitoPassiveScanChecks _scanchecks;
 
 
     @Override
@@ -14,8 +15,10 @@ public class MontoyaCognito implements BurpExtension {
         _api = api;
         _api.logging().logToOutput("Plugin Loading...");
         api.extension().setName("AWS Cognito");
-        handler = new AnnotateCognitoHandler(api);
-        api.proxy().registerRequestHandler(handler);
+        _handler = new AnnotateCognitoHandler(api);
+        api.proxy().registerRequestHandler(_handler);
+        _scanchecks = new CognitoPassiveScanChecks(api);
+        api.scanner().registerScanCheck(_scanchecks);
         _api.logging().logToOutput("Plugin Loaded");
     }
 }
