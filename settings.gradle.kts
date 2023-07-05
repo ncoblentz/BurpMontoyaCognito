@@ -1,2 +1,2 @@
-rootProject.name = "BurpMontoyaCognito"
+rootProject.name = "burpmontoyacognito"
 
