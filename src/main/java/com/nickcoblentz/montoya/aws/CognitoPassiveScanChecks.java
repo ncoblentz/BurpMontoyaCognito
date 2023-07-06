@@ -36,10 +36,10 @@ public class CognitoPassiveScanChecks implements ScanCheck {
 
     @Override
     public ConsolidationAction consolidateIssues(AuditIssue newIssue, AuditIssue existingIssue) {
-        if(newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_IDP_URL) || newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_POOL_URL) || newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_CLIENT_ID))
-        {
+        //if(newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_IDP_URL) || newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_POOL_URL) || newIssue.name().equals(CognitoAuditIssue.NAME_COGNITO_CLIENT_ID))
+        //{
             return existingIssue.detail().equals(newIssue.detail()) ? ConsolidationAction.KEEP_EXISTING : ConsolidationAction.KEEP_BOTH;
-        }
-        return ConsolidationAction.KEEP_BOTH;
+        //}
+        //return ConsolidationAction.KEEP_BOTH;
     }
 }

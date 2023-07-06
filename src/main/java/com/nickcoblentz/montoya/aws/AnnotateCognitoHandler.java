@@ -35,6 +35,7 @@ public class AnnotateCognitoHandler implements ProxyRequestHandler {
                 if(header.name().equalsIgnoreCase("X-Amz-Target"))
                 {
                     RequestHelper.PrependNote(interceptedRequest,"Cognito: "+header.value());
+                    break;
                 }
             }
         }
