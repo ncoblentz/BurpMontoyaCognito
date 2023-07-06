@@ -43,7 +43,8 @@ Sign Up Requests accept custom parameters in the form of:
 }""";
     private static final String NAME_COGNITO_AUTH_FOUND = "AWS Cognito Auth Found - Try Manual SignUp";
     private static final String BACKGROUND_COGNTIO_AUTH = "Try creating a user or updating a user's attributes (See the HTTP request tabs for examples) in applications that do not allow registration/signup and/or try custom fields for the signup."+BACKGROUND_COGNTIO_SIGNUP;
-    private static final String NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND = "AWS Cognito Custom User Attributes Found";
+    private static final String NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND_GETUSER = "AWS Cognito Custom User Attributes Found Through GetUser";
+    private static final String NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND_ID_TOKEN = "AWS Cognito Custom User Attributes Found Through Logging In";
     public static String NAME_COGNITO_IDP_URL="AWS Cognito IDP URL Found";
     public static String DETAIL_COGNITO_IDP_URL="<p>The following AWS Cognito IDP URL was accessed:</p><ul><li>%s</li></ul><p>From:</p><ul><li>%s</li></ul>";
 
@@ -245,11 +246,22 @@ Sign Up Requests accept custom parameters in the form of:
                 }
                 if(!identityPoolIDs.isEmpty())
                 {
+                    List<HttpRequestResponse> requestResponses = new LinkedList<HttpRequestResponse>();
+                    requestResponses.add(baseRequestResponse);
+                    /*int start = baseRequestResponse.url().indexOf(".");
+                    int end = baseRequestResponse.url().indexOf(".amazonaws.com");
+                    String region=baseRequestResponse.url().substring(start,end-1);
+                    HttpRequest baseIdentityRequest = HttpRequest.httpRequestFromUrl("https://cognito-identity."+region+".amazonaws.com/");*/
                     StringBuilder detailBuilder = new StringBuilder();
                     detailBuilder.append("<ul>");
                     for(String identityPoolID : identityPoolIDs)
                     {
                         detailBuilder.append(String.format("<li>%s (Referer: %s)</li>",identityPoolID,referer));
+                        /*HttpRequest request1 = baseIdentityRequest.withAddedHeader("X-Amz-Target","AWSCognitoIdentityService.GetId");
+                        request1.withBody(String.format("""
+{"IdentityPoolId":"%s"}
+                            """,identityPoolID));
+                        requestResponses.add(HttpRequestResponse.httpRequestResponse(request1,null));*/
                     }
                     detailBuilder.append("</ul>");
                     AuditIssue clientIDAuditIssue = auditIssue(NAME_COGNITO_IDENTITY_POOL_ID,
@@ -258,7 +270,25 @@ Sign Up Requests accept custom parameters in the form of:
                             baseRequestResponse.url(),
                             AuditIssueSeverity.INFORMATION,
                             AuditIssueConfidence.CERTAIN,
-                            null,
+                            """
+                                    <p>Try:</p>
+                                    <ul>
+                                    <li>omit regions with:<code>export AWS_DEFAULT_REGION="regionhere"</code>. Otherwise include <code>--region regionhere</code></li>
+                                    <li><code>export AWS_IDENTITY_POOL_ID="identitypoolidhere"</code>. Otherwise include <code>--region regionhere</code></li>
+                                    <li><code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID </code></li>
+                                    <li>Produces an IdentityId (use below): <code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID --logins cognito-idp.regionhere.amazonaws.com/issuerfromidtokenhere=idtokenvaluehere</code></li>
+                                    <li><code>export AWS_IDENTITY_ID="valuefromabove"</code>
+                                    <li>Produces SessionToken, SecretKey, SecretKey: <code>aws cognito-identity get-credentials-for-identity --identity-id $AWS_IDENTITY_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvalueherefrominitauthresponse</code></li>
+                                    <li>Set Values:<code>export AWS_ACCESS_KEY_ID=...'export AWS_SECRET_ACCESS_KEY=...;export AWS_SESSION_TOKEN=...</li>
+                                    <li><code>aws cognito-identity describe-identity --identity-id $AWS_IDENTITY_ID</code></li>
+                                    <li><code>aws cognito-identity describe-identity-pool --identity-pool-id $AWS_IDENTITY_POOL_ID</code></li>
+                                    <li><code>aws cognito-identity list-identity-pools --max-results 100</code></li>
+                                    <li><code>aws cognito-identity list-identities --identity-pool-id $AWS_IDENTITY_POOL_ID --max-results 100</code></li>
+                                    <li>Basic Flow Enabled? <code>aws cognito-identity get-open-id-token --identity-id $AWS_IDENTITY_ID --no-sign</code> and <code>aws sts assume-role-with-web-identity --role-arn <role_arn> --role-session-name sessionname --web-identity-token <token> --no-sign</code></li>
+                                                                        
+                                    </ul>
+                                    <p>Reference: https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_Operations.html</p>
+                                                                """,
                             null,
                             null,
                             baseRequestResponse);
@@ -378,7 +408,7 @@ Sign Up Requests accept custom parameters in the form of:
                                         builder.append(String.format("<li>%s</li>\n",customAttribute));
                                     }
                                     builder.append("</ul>");
-                                    AuditIssue auditIssue = auditIssue(NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND,
+                                    AuditIssue auditIssue = auditIssue(NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND_GETUSER,
                                             builder.toString(),
                                             null,
                                             baseRequestResponse.url(),
@@ -392,9 +422,14 @@ Sign Up Requests accept custom parameters in the form of:
                                 }
                             }
                         }
+                        else if(header.value().equalsIgnoreCase("AWSCognitoIdentityProviderService.RespondToAuthChallenge"))
+                        {
+                            CheckCustomAttributesInAccessToken(api,baseRequestResponse,auditIssues);
+                        }
                         else if(header.value().equalsIgnoreCase("AWSCognitoIdentityProviderService.InitiateAuth"))
                         {
                             String details = String.format("Cognito Login request was made from %s",referer);
+                            CheckCustomAttributesInAccessToken(api,baseRequestResponse,auditIssues);
                             List<HttpRequestResponse> requestresponses = new LinkedList<>();
                             requestresponses.add(baseRequestResponse);
                             String body = baseRequestResponse.request().bodyToString();
@@ -468,6 +503,56 @@ Sign Up Requests accept custom parameters in the form of:
             }
         }
         return null;
+    }
+
+    private static void CheckCustomAttributesInAccessToken(MontoyaApi api, HttpRequestResponse baseRequestResponse, List<AuditIssue> auditIssues) {
+        if(baseRequestResponse.response().statusCode()==200)
+        {
+            String body = baseRequestResponse.response().bodyToString();
+            if(body!=null && !body.isEmpty())
+            {
+                JSONObject bodyJSON = new JSONObject(body);
+                if(bodyJSON.has("AuthenticationResult") && bodyJSON.getJSONObject("AuthenticationResult").has("IdToken"))
+                {
+                    String idToken = bodyJSON.getJSONObject("AuthenticationResult").getString("IdToken");
+                    if(idToken!=null && !idToken.isEmpty())
+                    {
+                        int start = idToken.indexOf(".");
+                        int end = idToken.indexOf(".",start+1);
+                        String middle=idToken.substring(start+1,end);
+                        JSONObject middleJson = new JSONObject(api.utilities().base64Utils().decode(middle).toString());
+                        Set<String> customAttributesSet = new HashSet<>();
+                        for (Map.Entry<String, Object> entry : middleJson.toMap().entrySet()) {
+                            if(entry.getKey().startsWith("custom:"))
+                            {
+                                customAttributesSet.add(entry.getKey());
+                            }
+
+                        }
+                        StringBuilder builder = new StringBuilder();
+                        builder.append("<ul>");
+                        for(String attribute : customAttributesSet)
+                        {
+                            builder.append(String.format("<li>%s</li>",attribute));
+                        }
+                        builder.append("</ul>");
+                        AuditIssue auditIssue = auditIssue(NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND_ID_TOKEN,
+                                builder.toString(),
+                                null,
+                                baseRequestResponse.url(),
+                                AuditIssueSeverity.INFORMATION,
+                                AuditIssueConfidence.CERTAIN,
+                                null,
+                                null,
+                                null,
+                                baseRequestResponse);
+                        auditIssues.add(auditIssue);
+
+                    }
+                }
+            }
+        }
+
     }
 
     public static List<AuditIssue> AllPassiveChecks(MontoyaApi api, HttpRequestResponse baseRequestResponse)
