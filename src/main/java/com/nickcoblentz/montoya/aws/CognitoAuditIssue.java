@@ -276,7 +276,7 @@ Sign Up Requests accept custom parameters in the form of:
                                     <li>omit regions with:<code>export AWS_DEFAULT_REGION="regionhere"</code>. Otherwise include <code>--region regionhere</code></li>
                                     <li><code>export AWS_IDENTITY_POOL_ID="identitypoolidhere"</code>. Otherwise include <code>--region regionhere</code></li>
                                     <li><code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID </code></li>
-                                    <li>Produces an IdentityId (use below): <code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID --logins cognito-idp.regionhere.amazonaws.com/issuerfromidtokenhere=idtokenvaluehere</code></li>
+                                    <li>Produces an IdentityId (use below): <code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvaluehere</code></li>
                                     <li><code>export AWS_IDENTITY_ID="valuefromabove"</code>
                                     <li>Produces SessionToken, SecretKey, SecretKey: <code>aws cognito-identity get-credentials-for-identity --identity-id $AWS_IDENTITY_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvalueherefrominitauthresponse</code></li>
                                     <li>Set Values:<code>export AWS_ACCESS_KEY_ID=...'export AWS_SECRET_ACCESS_KEY=...;export AWS_SESSION_TOKEN=...</li>
