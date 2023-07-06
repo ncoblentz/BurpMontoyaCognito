@@ -1,5 +1,6 @@
 # Burp AWS Cognito (Using the Montoya API)
-__Author: Nick Coblentz__
+
+__Author: Nick Coblentz__, https://www.virtuesecurity.com
 
 This extension helps identify key information from requests to AWS Cognito and provides templates for exploiting several known vulnerabilities. Features include:
 - Proxy History: Adding comments to Burp Proxy History to reflect the Cognito Method found in `X-Amz-Target: AWSCognitoIdentityProviderService.RevokeToken`
