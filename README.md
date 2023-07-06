@@ -11,10 +11,35 @@ This extension helps identify key information from requests to AWS Cognito and p
   - Log custom user attributes found in the `idToken` or `GetUser` response
   - Log `InitiateAuth` requests and suggest request templates for `SignUp` and `UpdateUserAttributes` 
 
-## How to Download this Plugin
-Check out the "packages" section on the right of this GitHub Repo
-
 ## How to build this plugin
+### Setup a GitHub Access Token
+#### Why
+Even though the Utility Package referenced by the build is public, Github still requires you to have an access token
+
+Here's the relevant content in my `build.gradle.kts` file
+```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/ncoblentz/BurpMontoyaUtilities")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GHUSERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GHTOKEN")
+        }
+    }
+}
+```
+
+```kotlin
+dependencies {
+    implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
+```
+#### What to do
+
+1. Log into your personal github account and create an access token that can "Read Packages"
+2. `export GHUSERNAME="yourusernamehere"`
+3. `export GHTOKEN="youraccestokenhere"`
+
 ### Command-Line
 ```bash
 $ ./gradlew fatJar
