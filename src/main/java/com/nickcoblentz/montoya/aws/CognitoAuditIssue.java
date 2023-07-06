@@ -285,7 +285,7 @@ Sign Up Requests accept custom parameters in the form of:
                                     <li><code>aws cognito-identity list-identity-pools --max-results 100</code></li>
                                     <li><code>aws cognito-identity list-identities --identity-pool-id $AWS_IDENTITY_POOL_ID --max-results 100</code></li>
                                     <li>Basic Flow Enabled? <code>aws cognito-identity get-open-id-token --identity-id $AWS_IDENTITY_ID --no-sign</code> and <code>aws sts assume-role-with-web-identity --role-arn <role_arn> --role-session-name sessionname --web-identity-token <token> --no-sign</code></li>
-                                                                        
+                                    <li><code>git clone https://github.com/andresriancho/enumerate-iam.git</code>, then <code>./enumerate-iam.py --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY --session-token $AWS_SESSION_TOKEN --region $AWS_DEFAULT_REGION</code>          
                                     </ul>
                                     <p>Reference: https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_Operations.html</p>
                                                                 """,
@@ -527,7 +527,6 @@ Sign Up Requests accept custom parameters in the form of:
                             {
                                 customAttributesSet.add(entry.getKey());
                             }
-
                         }
                         StringBuilder builder = new StringBuilder();
                         builder.append("<ul>");
