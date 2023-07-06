@@ -10,6 +10,7 @@ import burp.api.montoya.scanner.audit.issues.AuditIssue;
 import burp.api.montoya.scanner.audit.issues.AuditIssueConfidence;
 import burp.api.montoya.scanner.audit.issues.AuditIssueSeverity;
 import com.nickcoblentz.montoya.utilities.RequestHelper;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue;
+
 
 public class CognitoAuditIssue {
     public static final String NAME_COGNITO_CLIENT_ID = "AWS Cognito Client ID Found";
@@ -40,7 +42,8 @@ Sign Up Requests accept custom parameters in the form of:
 ...
 }""";
     private static final String NAME_COGNITO_AUTH_FOUND = "AWS Cognito Auth Found - Try Manual SignUp";
-    private static final String BACKGROUND_COGNTIO_AUTH = "Try creating a user in applications that do not allow registration/signup and/or try custom fields for the signup."+BACKGROUND_COGNTIO_SIGNUP;
+    private static final String BACKGROUND_COGNTIO_AUTH = "Try creating a user or updating a user's attributes (See the HTTP request tabs for examples) in applications that do not allow registration/signup and/or try custom fields for the signup."+BACKGROUND_COGNTIO_SIGNUP;
+    private static final String NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND = "AWS Cognito Custom User Attributes Found";
     public static String NAME_COGNITO_IDP_URL="AWS Cognito IDP URL Found";
     public static String DETAIL_COGNITO_IDP_URL="<p>The following AWS Cognito IDP URL was accessed:</p><ul><li>%s</li></ul><p>From:</p><ul><li>%s</li></ul>";
 
@@ -219,7 +222,7 @@ Sign Up Requests accept custom parameters in the form of:
 
                 }
 
-                if(clientIDs.size()>0)
+                if(!clientIDs.isEmpty())
                 {
                     StringBuilder detailBuilder = new StringBuilder();
                     detailBuilder.append("<ul>");
@@ -240,7 +243,7 @@ Sign Up Requests accept custom parameters in the form of:
                             baseRequestResponse);
                     auditIssues.add(clientIDAuditIssue);
                 }
-                if(identityPoolIDs.size()>0)
+                if(!identityPoolIDs.isEmpty())
                 {
                     StringBuilder detailBuilder = new StringBuilder();
                     detailBuilder.append("<ul>");
@@ -262,7 +265,7 @@ Sign Up Requests accept custom parameters in the form of:
                     auditIssues.add(clientIDAuditIssue);
                 }
 
-                if(userPoolIDs.size()>0)
+                if(!userPoolIDs.isEmpty())
                 {
                     StringBuilder detailBuilder = new StringBuilder();
                     detailBuilder.append("<ul>");
@@ -336,6 +339,59 @@ Sign Up Requests accept custom parameters in the form of:
                                     baseRequestResponse);
                             auditIssues.add(signUpAuditIssue);
                         }
+                        else if(header.value().equals("AWSCognitoIdentityProviderService.GetUser"))
+                        {
+                            String body = baseRequestResponse.response().bodyToString();
+                            if(body!=null && body.length()>0) {
+                                JSONObject bodyJson = new JSONObject(body);
+                                Set<String> customUserAttributes = new HashSet<>();
+                                JSONArray foundAttributes=null;
+                                try {
+                                    foundAttributes = bodyJson.getJSONArray("UserAttributes");
+                                }
+                                catch(JSONException e)
+                                {
+                                    api.logging().logToError("Found UserAttributes JSON but no or wrong value");
+                                }
+                                if(foundAttributes!=null) {
+                                    for (int i = 0; i < foundAttributes.length(); i++) {
+                                        Map<String,Object> attributeMap=null;
+                                        try {
+                                            attributeMap = foundAttributes.getJSONObject(i).toMap();
+                                        }
+                                        catch(JSONException e)
+                                        {
+                                            api.logging().logToError("Whoops that wasn't a map");
+                                        }
+                                        if (attributeMap!=null && attributeMap.get("Name").toString().startsWith("custom:"))
+                                        {
+                                            customUserAttributes.add(attributeMap.get("Name").toString());
+                                        }
+                                    }
+                                }
+                                if(!customUserAttributes.isEmpty())
+                                {
+                                    StringBuilder builder = new StringBuilder();
+                                    builder.append(String.format("From: %s<br/>\n<ul>\n",referer));
+                                    for(String customAttribute : customUserAttributes)
+                                    {
+                                        builder.append(String.format("<li>%s</li>\n",customAttribute));
+                                    }
+                                    builder.append("</ul>");
+                                    AuditIssue auditIssue = auditIssue(NAME_COGNITO_CUSTOM_ATTRIBUTES_FOUND,
+                                            builder.toString(),
+                                            null,
+                                            baseRequestResponse.url(),
+                                            AuditIssueSeverity.INFORMATION,
+                                            AuditIssueConfidence.CERTAIN,
+                                            null,
+                                            null,
+                                            null,
+                                            baseRequestResponse);
+                                    auditIssues.add(auditIssue);
+                                }
+                            }
+                        }
                         else if(header.value().equalsIgnoreCase("AWSCognitoIdentityProviderService.InitiateAuth"))
                         {
                             String details = String.format("Cognito Login request was made from %s",referer);
@@ -351,9 +407,11 @@ Sign Up Requests accept custom parameters in the form of:
                                     api.logging().logToError("Found ClientID JSON but no or wrong value");
                                 }
                                 if (clientId != null && !clientId.trim().isEmpty()) {
-                                    HttpRequest request = baseRequestResponse.request().withRemovedHeader("X-Amz-Target");
-                                    request = request.withAddedHeader("X-Amz-Target","AWSCognitoIdentityProviderService.SignUp");
-                                    request = request.withBody(String.format(
+                                    HttpRequest requestSignUp = baseRequestResponse.request().withRemovedHeader("X-Amz-Target");
+                                    HttpRequest requestUpdateAttribute = baseRequestResponse.request().withRemovedHeader("X-Amz-Target");
+                                    requestSignUp = requestSignUp.withAddedHeader("X-Amz-Target","AWSCognitoIdentityProviderService.SignUp");
+                                    requestUpdateAttribute = requestUpdateAttribute.withAddedHeader("X-Amz-Target","AWSCognitoIdentityProviderService.UpdateUserAttributes");
+                                    requestSignUp = requestSignUp.withBody(String.format(
 """
 //https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html <-- Delete Me
 {
@@ -361,7 +419,7 @@ Sign Up Requests accept custom parameters in the form of:
    "Password": "YourPasswordHere",
    "UserAttributes": [{
          "Name": "custom:customfieldhere",
-         "Value": "asdfdfsa"
+         "Value": "ValueHere"
       },     
       {
          "Name": "email",
@@ -371,12 +429,27 @@ Sign Up Requests accept custom parameters in the form of:
    "Username": "YourUsernameHere"
 }
         """,clientId));
-                                    requestresponses.add(HttpRequestResponse.httpRequestResponse(request,null));
+                                    requestresponses.add(HttpRequestResponse.httpRequestResponse(requestSignUp,null));
 
+                                    requestUpdateAttribute = requestUpdateAttribute.withBody(String.format(
+                                            """
+//https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_UpdateUserAttributes.html <-- Delete Me
+//https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html <-- Delete Me
+{
+   "AccessToken": "AccessTokenFromUserLoginHere",
+   "UserAttributes": [
+     {
+        "Name": "custom:customfieldhere",
+        "Value": "ValueHere"
+     }
+  ]
+}
+                                                                                                        """));
+                                    requestresponses.add(HttpRequestResponse.httpRequestResponse(requestUpdateAttribute,null));
                                 }
                             }
 
-                            AuditIssue signUpAuditIssue = auditIssue(NAME_COGNITO_AUTH_FOUND,
+                            AuditIssue auditIssue = auditIssue(NAME_COGNITO_AUTH_FOUND,
                                     details,
                                     null,
                                     baseRequestResponse.url(),
@@ -386,7 +459,7 @@ Sign Up Requests accept custom parameters in the form of:
                                     null,
                                     null,
                                     requestresponses);
-                            auditIssues.add(signUpAuditIssue);
+                            auditIssues.add(auditIssue);
                         }
                         break;
                     }
@@ -419,7 +492,7 @@ Sign Up Requests accept custom parameters in the form of:
 
     public static void appendAuditIssue(List<AuditIssue> existingAuditIssues, List<AuditIssue> newAuditIssues)
     {
-        if(newAuditIssues!=null && newAuditIssues.size()>0)
+        if(newAuditIssues!=null && !newAuditIssues.isEmpty())
         {
             existingAuditIssues.addAll(newAuditIssues);
         }
