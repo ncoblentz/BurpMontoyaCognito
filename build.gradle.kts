@@ -13,8 +13,8 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/ncoblentz/BurpMontoyaUtilities")
         credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-            password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GHUSERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GHTOKEN")
         }
     }
 }
@@ -24,6 +24,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("net.portswigger.burp.extensions:montoya-api:+")
     implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
+    implementation("org.json:json:+")
+
 }
 
 tasks.test {

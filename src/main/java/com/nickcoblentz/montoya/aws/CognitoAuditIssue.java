@@ -2,22 +2,25 @@ package com.nickcoblentz.montoya.aws;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.params.ParsedHttpParameter;
 import burp.api.montoya.scanner.audit.issues.AuditIssue;
 
 import burp.api.montoya.scanner.audit.issues.AuditIssueConfidence;
 import burp.api.montoya.scanner.audit.issues.AuditIssueSeverity;
 import com.nickcoblentz.montoya.utilities.RequestHelper;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue;
 
 public class CognitoAuditIssue {
+    public static final String NAME_COGNITO_CLIENT_ID = "AWS Cognito Client ID Found";
     public static String NAME_COGNITO_IDP_URL="AWS Cognito IDP URL Found";
     public static String DETAIL_COGNITO_IDP_URL="<p>The following AWS Cognito IDP URL was accessed:</p><ul><li>%s</li></ul><p>From:</p><ul><li>%s</li></ul>";
 
@@ -25,6 +28,8 @@ public class CognitoAuditIssue {
     public static String NAME_COGNITO_POOL_URL="AWS Cognito POOL URL Found";
     public static String DETAIL_COGNITO_POOL_URL="<p>The following AWS Cognito Pool URL was accessed:</p><ul><li>%s</li></ul><p>From:</p><ul><li>%s</li></ul>";
     public static Pattern POOL_URL_PATTERN=Pattern.compile("^cognito-identity(?:-fips)?.[^\\.]+.amazonaws.com$", Pattern.CASE_INSENSITIVE);
+
+    public static Pattern GENERAL_URL_PATTERN=Pattern.compile("^cognito-(?:identity|idp)(?:-fips)?.[^\\.]+.amazonaws.com$", Pattern.CASE_INSENSITIVE);
 
     public static AuditIssue PassiveCheckIDPURL(MontoyaApi api, HttpRequestResponse baseRequestResponse)
     {
@@ -90,7 +95,7 @@ public class CognitoAuditIssue {
                 return auditIssue(issueName,
                         detail,
                         null,
-                        referer,
+                        baseRequestResponse.url(),
                         AuditIssueSeverity.INFORMATION,
                         AuditIssueConfidence.CERTAIN,
                         null,
@@ -102,12 +107,91 @@ public class CognitoAuditIssue {
         return null;
     }
 
+    public static List<AuditIssue> PassiveCheckLogClientIDAndPools(MontoyaApi api, HttpRequestResponse baseRequestResponse)
+    {
+        api.logging().logToOutput("PassiveCheckLogClientIDAndPools");
+        if(baseRequestResponse!=null && baseRequestResponse.request()!=null) {
+            URL url;
+            try {
+                url = new URL(baseRequestResponse.request().url());
+            }
+            catch(MalformedURLException e)
+            {
+                return null;
+            }
+            api.logging().logToOutput("Url: "+url.toString());
+
+
+            Set<String> clientIDs = new HashSet<>();
+
+            if(GENERAL_URL_PATTERN.matcher(url.getHost()).matches())
+            {
+                List<AuditIssue> auditIssues = new LinkedList<>();
+                api.logging().logToOutput("Matched");
+
+                String referer = RequestHelper.GetHeaderValue(baseRequestResponse.request(),"Referer");
+                if(referer==null){
+                    referer="none";
+                }
+
+                for(ParsedHttpParameter parameter : baseRequestResponse.request().parameters())
+                {
+                    if(parameter.name().equalsIgnoreCase("ClientId"))
+                    {
+                        clientIDs.add(parameter.value()+" (Referer: "+api.utilities().htmlUtils().encode(referer)+")");
+                    }
+                }
+
+                String body = baseRequestResponse.request().bodyToString();
+                if(body!=null && body.length()>0) {
+                    JSONObject bodyJson = new JSONObject(body);
+                    String clientId = null;
+                    try {
+                        clientId = bodyJson.getString("ClientId");
+                    }
+                    catch(JSONException e)
+                    {
+                        api.logging().logToError("Found ClientID JSON but no or wrong value");
+                    }
+                    if(clientId!=null && clientId.length()>0)
+                    {
+                        clientIDs.add(clientId);
+                    }
+                }
+
+                if(clientIDs.size()>0)
+                {
+                    StringBuilder detailBuilder = new StringBuilder();
+                    for(String clientId : clientIDs)
+                    {
+                        detailBuilder.append(String.format("<li>%s (Referer: %s)</li>",clientId," (Referer: "+api.utilities().htmlUtils().encode(referer)+")"));
+                    }
+
+                    AuditIssue clientIDAuditIssue = auditIssue(NAME_COGNITO_CLIENT_ID,
+                            detailBuilder.toString(),
+                            null,
+                            baseRequestResponse.url(),
+                            AuditIssueSeverity.INFORMATION,
+                            AuditIssueConfidence.CERTAIN,
+                            null,
+                            null,
+                            null,
+                            baseRequestResponse);
+                    auditIssues.add(clientIDAuditIssue);
+                }
+                return auditIssues;
+            }
+        }
+        return null;
+    }
+
 
     public static List<AuditIssue> AllPassiveChecks(MontoyaApi api, HttpRequestResponse baseRequestResponse)
     {
         List<AuditIssue> allIssues = new LinkedList<AuditIssue>();
         appendAuditIssue(allIssues,PassiveCheckIDPURL(api,baseRequestResponse));
         appendAuditIssue(allIssues,PassiveCheckPoolURL(api,baseRequestResponse));
+        appendAuditIssue(allIssues,PassiveCheckLogClientIDAndPools(api,baseRequestResponse));
         return allIssues;
     }
 
@@ -116,6 +200,14 @@ public class CognitoAuditIssue {
         if(auditIssue!=null)
         {
             auditIssues.add(auditIssue);
+        }
+    }
+
+    public static void appendAuditIssue(List<AuditIssue> existingAuditIssues, List<AuditIssue> newAuditIssues)
+    {
+        if(newAuditIssues!=null && newAuditIssues.size()>0)
+        {
+            existingAuditIssues.addAll(newAuditIssues);
         }
     }
 }
