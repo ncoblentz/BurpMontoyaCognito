@@ -28,7 +28,7 @@ public class AnnotateCognitoHandler implements ProxyRequestHandler {
 
     private void handleRequest(InterceptedRequest interceptedRequest)
     {
-        if(interceptedRequest.url().toLowerCase().startsWith("https://cognito-idp"))
+        if(interceptedRequest.url().toLowerCase().startsWith("https://cognito-"))
         {
             for(HttpHeader header : interceptedRequest.headers())
             {

@@ -21,6 +21,7 @@ import static burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue;
 
 public class CognitoAuditIssue {
     public static final String NAME_COGNITO_CLIENT_ID = "AWS Cognito Client ID Found";
+    private static final String NAME_COGNITO_POOL_ID = "AWS Cognito Identity POOL ID Found";
     public static String NAME_COGNITO_IDP_URL="AWS Cognito IDP URL Found";
     public static String DETAIL_COGNITO_IDP_URL="<p>The following AWS Cognito IDP URL was accessed:</p><ul><li>%s</li></ul><p>From:</p><ul><li>%s</li></ul>";
 
@@ -122,11 +123,13 @@ public class CognitoAuditIssue {
             api.logging().logToOutput("Url: "+url.toString());
 
 
-            Set<String> clientIDs = new HashSet<>();
+
 
             if(GENERAL_URL_PATTERN.matcher(url.getHost()).matches())
             {
                 List<AuditIssue> auditIssues = new LinkedList<>();
+                Set<String> clientIDs = new HashSet<>();
+                Set<String> identityPoolIDs = new HashSet<>();
                 api.logging().logToOutput("Matched");
 
                 String referer = RequestHelper.GetHeaderValue(baseRequestResponse.request(),"Referer");
@@ -138,7 +141,12 @@ public class CognitoAuditIssue {
                 {
                     if(parameter.name().equalsIgnoreCase("ClientId"))
                     {
-                        clientIDs.add(parameter.value()+" (Referer: "+api.utilities().htmlUtils().encode(referer)+")");
+                        clientIDs.add(String.format("<li>%s (Referer: %s)</li>",parameter.value(),api.utilities().htmlUtils().encode(referer)));
+                    }
+
+                    if(parameter.name().equalsIgnoreCase("IdentityPoolId"))
+                    {
+                        identityPoolIDs.add(String.format("<li>%s (Referer: %s)</li>",parameter.value(),api.utilities().htmlUtils().encode(referer)));
                     }
                 }
 
@@ -153,21 +161,57 @@ public class CognitoAuditIssue {
                     {
                         api.logging().logToError("Found ClientID JSON but no or wrong value");
                     }
-                    if(clientId!=null && clientId.length()>0)
+                    if(clientId!=null && !clientId.trim().isEmpty())
                     {
-                        clientIDs.add(clientId);
+                        clientIDs.add(clientId.trim());
                     }
+
+                    String identityPoolId = null;
+                    try {
+                        clientId = bodyJson.getString("IdentityPoolId");
+                    }
+                    catch(JSONException e)
+                    {
+                        api.logging().logToError("Found IdentityPoolId JSON but no or wrong value");
+                    }
+                    if(identityPoolId!=null && !identityPoolId.trim().isEmpty())
+                    {
+                        identityPoolIDs.add(identityPoolId.trim());
+                    }
+
                 }
 
                 if(clientIDs.size()>0)
                 {
                     StringBuilder detailBuilder = new StringBuilder();
+                    detailBuilder.append("<ul>");
                     for(String clientId : clientIDs)
                     {
-                        detailBuilder.append(String.format("<li>%s (Referer: %s)</li>",clientId," (Referer: "+api.utilities().htmlUtils().encode(referer)+")"));
+                        detailBuilder.append(String.format("<li>%s (Referer: %s)</li>",clientId,referer));
                     }
-
+                    detailBuilder.append("</ul>");
                     AuditIssue clientIDAuditIssue = auditIssue(NAME_COGNITO_CLIENT_ID,
+                            detailBuilder.toString(),
+                            null,
+                            baseRequestResponse.url(),
+                            AuditIssueSeverity.INFORMATION,
+                            AuditIssueConfidence.CERTAIN,
+                            null,
+                            null,
+                            null,
+                            baseRequestResponse);
+                    auditIssues.add(clientIDAuditIssue);
+                }
+                if(identityPoolIDs.size()>0)
+                {
+                    StringBuilder detailBuilder = new StringBuilder();
+                    detailBuilder.append("<ul>");
+                    for(String identityPoolID : identityPoolIDs)
+                    {
+                        detailBuilder.append(String.format("<li>%s (Referer: %s)</li>",identityPoolID,referer));
+                    }
+                    detailBuilder.append("</ul>");
+                    AuditIssue clientIDAuditIssue = auditIssue(NAME_COGNITO_POOL_ID,
                             detailBuilder.toString(),
                             null,
                             baseRequestResponse.url(),
