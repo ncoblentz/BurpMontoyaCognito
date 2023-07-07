@@ -1,10 +1,11 @@
 plugins {
     id("java")
-    `maven-publish`
+    id("maven-publish")
+
 }
 
 group = "com.nickcoblentz.montoya.aws"
-version = "0.1.0"
+version = "0.1.2"
 
 
 //Run -> Edit Configuration -> Gradle-Build, Environment Variables: USERNAME and TOKEN
@@ -75,7 +76,9 @@ publishing {
     }
     publications {
         register<MavenPublication>("gpr") {
-            from(components["java"])
+            //from(components["java"])
+            artifact(tasks.findByPath("fatJar"))
         }
+
     }
 }

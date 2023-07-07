@@ -11,6 +11,8 @@ This extension helps identify key information from requests to AWS Cognito and p
   - Log custom user attributes found in the `idToken` or `GetUser` response
   - Log `InitiateAuth` requests and suggest request templates for `SignUp` and `UpdateUserAttributes` 
 
+## Download the Plugin
+See the packages section on the right hand side of this Github Repo. Look for `burpmontoyacognito-x.y.z-fatjar.jar`.
 ## How to build this plugin
 ### Setup a GitHub Access Token
 #### Why
