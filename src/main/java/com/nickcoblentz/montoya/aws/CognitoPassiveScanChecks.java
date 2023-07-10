@@ -7,7 +7,9 @@ import burp.api.montoya.scanner.ConsolidationAction;
 import burp.api.montoya.scanner.ScanCheck;
 import burp.api.montoya.scanner.audit.insertionpoint.AuditInsertionPoint;
 import burp.api.montoya.scanner.audit.issues.AuditIssue;
+import com.nickcoblentz.montoya.utilities.LogHelper;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static burp.api.montoya.scanner.AuditResult.auditResult;
@@ -29,8 +31,23 @@ public class CognitoPassiveScanChecks implements ScanCheck {
 
     @Override
     public AuditResult passiveAudit(HttpRequestResponse baseRequestResponse) {
-        _api.logging().logToOutput("Passive hit");
-        List<AuditIssue> auditIssues = CognitoAuditIssue.AllPassiveChecks(_api,baseRequestResponse);
+        LogHelper loghelper = LogHelper.GetInstance(_api);
+        loghelper.Debug("Passive hit");
+        List<AuditIssue> auditIssues = new LinkedList<>();
+        List<MyScanner> scanners = new LinkedList<>();
+        scanners.add(new IDPURLScanner(_api));
+        scanners.add(new PoolURLScanner(_api));
+        scanners.add(new ClientPoolIdentityIDScanner(_api));
+        scanners.add(new LogGetUserUserAttributesScanner(_api));
+        scanners.add(new LogIdTokenUserAttributesScanner(_api));
+        scanners.add(new SuggestExploitsScanner(_api));
+
+        for(MyScanner scanner : scanners)
+        {
+            auditIssues.addAll(scanner.Scan(baseRequestResponse));
+        }
+
+        //CognitoAuditIssue.AllPassiveChecks(_api,baseRequestResponse);
         return auditResult(auditIssues);
     }
 

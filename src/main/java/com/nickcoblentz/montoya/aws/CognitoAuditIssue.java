@@ -9,6 +9,7 @@ import burp.api.montoya.scanner.audit.issues.AuditIssue;
 
 import burp.api.montoya.scanner.audit.issues.AuditIssueConfidence;
 import burp.api.montoya.scanner.audit.issues.AuditIssueSeverity;
+import com.nickcoblentz.montoya.utilities.LogHelper;
 import com.nickcoblentz.montoya.utilities.RequestHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,7 +68,8 @@ Sign Up Requests accept custom parameters in the form of:
 
     public static AuditIssue PassiveCheckURL(MontoyaApi api, HttpRequestResponse baseRequestResponse,String issueName)
     {
-        api.logging().logToOutput("PassiveCheckURL");
+        LogHelper loghelper = LogHelper.GetInstance(api);
+        loghelper.Debug("PassiveCheckURL");
         if(baseRequestResponse!=null && baseRequestResponse.request()!=null) {
             URL url;
             try {
@@ -77,7 +79,7 @@ Sign Up Requests accept custom parameters in the form of:
             {
                 return null;
             }
-            api.logging().logToOutput("Url: "+url.toString());
+            loghelper.Debug("Url: "+url.toString());
 
             Pattern selectedPattern;
             if(issueName.equals(NAME_COGNITO_IDP_URL))
@@ -92,17 +94,17 @@ Sign Up Requests accept custom parameters in the form of:
             {
                 return null;
             }
-            api.logging().logToOutput("Pattern: "+selectedPattern);
+            loghelper.Debug("Pattern: "+selectedPattern);
 
             if(selectedPattern.matcher(url.getHost()).matches())
             {
-                api.logging().logToOutput("Matched");
+                loghelper.Debug("Matched");
                 String referer = RequestHelper.GetHeaderValue(baseRequestResponse.request(),"Referer");
                 if(referer==null){
                     referer="none";
                 }
 
-                api.logging().logToOutput("Referer: "+referer);
+                loghelper.Debug("Referer: "+referer);
 
                 String detail="";
                 if(issueName.equals(NAME_COGNITO_IDP_URL))
@@ -114,7 +116,7 @@ Sign Up Requests accept custom parameters in the form of:
                     detail=String.format(DETAIL_COGNITO_POOL_URL,url,referer);
                 }
 
-                api.logging().logToOutput("Detail: "+detail);
+                loghelper.Debug("Detail: "+detail);
 
                 return auditIssue(issueName,
                         detail,
@@ -133,7 +135,8 @@ Sign Up Requests accept custom parameters in the form of:
 
     public static List<AuditIssue> PassiveCheckLogClientIDAndPools(MontoyaApi api, HttpRequestResponse baseRequestResponse)
     {
-        api.logging().logToOutput("PassiveCheckLogClientIDAndPools");
+        LogHelper loghelper = LogHelper.GetInstance(api);
+        loghelper.Debug("PassiveCheckLogClientIDAndPools");
         if(baseRequestResponse!=null && baseRequestResponse.request()!=null) {
             URL url;
             try {
@@ -143,7 +146,7 @@ Sign Up Requests accept custom parameters in the form of:
             {
                 return null;
             }
-            api.logging().logToOutput("Url: "+url.toString());
+            loghelper.Debug("Url: "+url.toString());
 
 
 
@@ -154,7 +157,7 @@ Sign Up Requests accept custom parameters in the form of:
                 Set<String> clientIDs = new HashSet<>();
                 Set<String> identityPoolIDs = new HashSet<>();
                 Set<String> userPoolIDs = new HashSet<>();
-                api.logging().logToOutput("Matched");
+                loghelper.Debug("Matched");
 
                 String referer = RequestHelper.GetHeaderValue(baseRequestResponse.request(),"Referer");
                 if(referer==null){
@@ -188,7 +191,7 @@ Sign Up Requests accept custom parameters in the form of:
                     }
                     catch(JSONException e)
                     {
-                        api.logging().logToError("Found ClientID JSON but no or wrong value");
+                        loghelper.Error("Found ClientID JSON but no or wrong value");
                     }
                     if(clientId!=null && !clientId.trim().isEmpty())
                     {
@@ -201,7 +204,7 @@ Sign Up Requests accept custom parameters in the form of:
                     }
                     catch(JSONException e)
                     {
-                        api.logging().logToError("Found IdentityPoolId JSON but no or wrong value");
+                        loghelper.Error("Found IdentityPoolId JSON but no or wrong value");
                     }
                     if(identityPoolId!=null && !identityPoolId.trim().isEmpty())
                     {
@@ -214,7 +217,7 @@ Sign Up Requests accept custom parameters in the form of:
                     }
                     catch(JSONException e)
                     {
-                        api.logging().logToError("Found UserPoolId JSON but no or wrong value");
+                        loghelper.Error("Found UserPoolId JSON but no or wrong value");
                     }
                     if(userPoolId!=null && !userPoolId.trim().isEmpty())
                     {
@@ -326,7 +329,8 @@ Sign Up Requests accept custom parameters in the form of:
 
     private static List<AuditIssue> PassiveCheckSuggestExploits(MontoyaApi api, HttpRequestResponse baseRequestResponse)
     {
-        api.logging().logToOutput("PassiveCheckSuggestExploits");
+        LogHelper loghelper = LogHelper.GetInstance(api);
+        loghelper.Debug("PassiveCheckSuggestExploits");
         if(baseRequestResponse!=null && baseRequestResponse.request()!=null) {
             URL url;
             try {
@@ -336,14 +340,14 @@ Sign Up Requests accept custom parameters in the form of:
             {
                 return null;
             }
-            api.logging().logToOutput("Url: "+url.toString());
+            loghelper.Debug("Url: "+url.toString());
 
 
 
 
             if(GENERAL_URL_PATTERN.matcher(url.getHost()).matches())
             {
-                api.logging().logToOutput("Matched");
+                loghelper.Debug("Matched");
                 List<AuditIssue> auditIssues = new LinkedList<>();
 
                 String referer = RequestHelper.GetHeaderValue(baseRequestResponse.request(),"Referer");
@@ -383,7 +387,7 @@ Sign Up Requests accept custom parameters in the form of:
                                 }
                                 catch(JSONException e)
                                 {
-                                    api.logging().logToError("Found UserAttributes JSON but no or wrong value");
+                                    loghelper.Error("Found UserAttributes JSON but no or wrong value");
                                 }
                                 if(foundAttributes!=null) {
                                     for (int i = 0; i < foundAttributes.length(); i++) {
@@ -393,7 +397,7 @@ Sign Up Requests accept custom parameters in the form of:
                                         }
                                         catch(JSONException e)
                                         {
-                                            api.logging().logToError("Whoops that wasn't a map");
+                                            loghelper.Error("Whoops that wasn't a map");
                                         }
                                         if (attributeMap!=null && attributeMap.get("Name").toString().startsWith("custom:"))
                                         {
@@ -441,7 +445,7 @@ Sign Up Requests accept custom parameters in the form of:
                                 try {
                                     clientId = bodyJson.getString("ClientId");
                                 } catch (JSONException e) {
-                                    api.logging().logToError("Found ClientID JSON but no or wrong value");
+                                    loghelper.Error("Found ClientID JSON but no or wrong value");
                                 }
                                 if (clientId != null && !clientId.trim().isEmpty()) {
                                     HttpRequest requestSignUp = baseRequestResponse.request().withRemovedHeader("X-Amz-Target");

@@ -2,6 +2,7 @@ package com.nickcoblentz.montoya.aws;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import com.nickcoblentz.montoya.utilities.LogHelper;
 
 public class MontoyaCognito implements BurpExtension {
 
@@ -10,15 +11,18 @@ public class MontoyaCognito implements BurpExtension {
     private CognitoPassiveScanChecks _scanchecks;
 
 
+
     @Override
     public void initialize(MontoyaApi api) {
         _api = api;
-        _api.logging().logToOutput("Plugin Loading...");
+        LogHelper loghelper = LogHelper.GetInstance(api);
+        loghelper.SetLevel(LogHelper.LogLevel.DEBUG);
+        loghelper.Info("Plugin Loading...");
         api.extension().setName("AWS Cognito");
         _scanchecks = new CognitoPassiveScanChecks(api);
         api.scanner().registerScanCheck(_scanchecks);
         _handler = new AnnotateCognitoHandler(api);
         api.proxy().registerRequestHandler(_handler);
-        _api.logging().logToOutput("Plugin Loaded");
+        loghelper.Info("Plugin Loaded");
     }
 }
