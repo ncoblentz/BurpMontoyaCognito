@@ -12,11 +12,44 @@ This extension helps identify key information from requests to AWS Cognito and p
   - Log `InitiateAuth` requests and suggest request templates for `SignUp` and `UpdateUserAttributes` 
   - Log `AWSCognitoIdentityService.GetCredentialsForIdentity` requests containing temporary credentials
 
+## Examples
+
+### Burp Proxy Comments Reflected the `X-Amz-Target`
+
+![](screenshots/2023-07-12-14-54-55.png)
+
+### Identity Pool Found
+
+![](screenshots/2023-07-12-14-43-08.png)
+
+### Identity Pool URL Found
+
+![](screenshots/2023-07-12-14-43-53.png)
+
+### Sign Up Request
+
+![](screenshots/2023-07-12-14-44-33.png)
+
+### Generated Requests to Send to Repeater
+
+#### Sign Up
+
+![](screenshots/2023-07-12-14-47-02.png)
+
+#### UpdateUserAttributes
+
+![](screenshots/2023-07-12-14-47-43.png)
+
 ## Download the Plugin
+
 See the packages section on the right hand side of this Github Repo. Look for `burpmontoyacognito-x.y.z-fatjar.jar`.
+
 ## How to build this plugin
+
 ### Setup a GitHub Access Token
+
 #### Why
+
 Even though the Utility Package referenced by the build is public, Github still requires you to have an access token
 
 Here's the relevant content in my `build.gradle.kts` file
