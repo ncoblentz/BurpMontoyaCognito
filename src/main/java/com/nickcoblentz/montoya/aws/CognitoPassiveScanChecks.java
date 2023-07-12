@@ -41,6 +41,7 @@ public class CognitoPassiveScanChecks implements ScanCheck {
         scanners.add(new LogGetUserUserAttributesScanner(_api));
         scanners.add(new LogIdTokenUserAttributesScanner(_api));
         scanners.add(new SuggestExploitsScanner(_api));
+        scanners.add(new LogTemporaryCredentials(_api));
 
         for(MyScanner scanner : scanners)
         {

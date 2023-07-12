@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.nickcoblentz.montoya.aws"
-version = "0.1.3"
+version = "0.1.4"
 
 
 //Run -> Edit Configuration -> Gradle-Build, Environment Variables: USERNAME and TOKEN

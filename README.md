@@ -10,6 +10,7 @@ This extension helps identify key information from requests to AWS Cognito and p
   - Log Client IDs observed in requests
   - Log custom user attributes found in the `idToken` or `GetUser` response
   - Log `InitiateAuth` requests and suggest request templates for `SignUp` and `UpdateUserAttributes` 
+  - Log `AWSCognitoIdentityService.GetCredentialsForIdentity` requests containing temporary credentials
 
 ## Download the Plugin
 See the packages section on the right hand side of this Github Repo. Look for `burpmontoyacognito-x.y.z-fatjar.jar`.
@@ -68,6 +69,7 @@ $ aws cognito-identity get-id --identity-pool-id $AWS_IDENTITY_POOL_ID --logins 
 $ export AWS_IDENTITY_ID="valuefromabove"
 $ aws cognito-identity get-credentials-for-identity --identity-id $AWS_IDENTITY_ID --logins cognito-idp.$AWS_DEFAULT_REGION.amazonaws.com/issuerfromidtokenhere=idtokenvalueherefrominitauthresponse # Produces SessionToken, SecretKey, SecretKey
 $ export AWS_ACCESS_KEY_ID="...";export AWS_SECRET_ACCESS_KEY="...";export AWS_SESSION_TOKEN="..."
+$ aws sts get-caller-identity #check what additional roles this token has
 $ aws cognito-identity describe-identity --identity-id $AWS_IDENTITY_ID</code></li>
 $ aws cognito-identity describe-identity-pool --identity-pool-id $AWS_IDENTITY_POOL_ID</code></li>
 $ aws cognito-identity list-identity-pools --max-results 100</code></li>
