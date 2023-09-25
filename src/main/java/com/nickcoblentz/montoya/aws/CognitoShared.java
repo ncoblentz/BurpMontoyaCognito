@@ -90,7 +90,7 @@ public class CognitoShared {
 
     public static URL getJavaURL(HttpRequestResponse baseRequestResponse)
     {
-        return getJavaURL(baseRequestResponse.url());
+        return getJavaURL(baseRequestResponse.request().url());
     }
 
     public static URL getJavaURL(HttpRequest request)

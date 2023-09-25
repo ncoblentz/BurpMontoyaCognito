@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.nickcoblentz.montoya.aws"
-version = "0.1.4"
+version = "0.1.5"
 
 
 //Run -> Edit Configuration -> Gradle-Build, Environment Variables: USERNAME and TOKEN
@@ -23,7 +23,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation("net.portswigger.burp.extensions:montoya-api:+")
+    implementation("net.portswigger.burp.extensions:montoya-api:2023.10.3")
     implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
     implementation("org.json:json:+")
 
@@ -69,8 +69,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/ncoblentz/BurpMontoyaCognito")
             credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GHUSERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GHTOKEN")
             }
         }
     }

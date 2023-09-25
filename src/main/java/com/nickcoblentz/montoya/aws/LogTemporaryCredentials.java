@@ -26,7 +26,7 @@ public class LogTemporaryCredentials extends MyScanner {
             AuditIssue auditIssue = auditIssue(ISSUE_NAME,
                     String.format("Temporary AWS Credentials Found from %s!",CognitoShared.getReferer(_api, baseRequestResponse.request())),
                     null,
-                    baseRequestResponse.url(),
+                    baseRequestResponse.request().url(),
                     AuditIssueSeverity.INFORMATION,
                     AuditIssueConfidence.CERTAIN,
                     CognitoShared.EXPLOIT_DESCRIPTION,

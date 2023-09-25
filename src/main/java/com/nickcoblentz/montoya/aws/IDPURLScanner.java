@@ -42,7 +42,7 @@ public class IDPURLScanner extends MyScanner {
                     AuditIssue auditIssue = auditIssue(ISSUE_NAME,
                             detail,
                             null,
-                            baseRequestResponse.url(),
+                            baseRequestResponse.request().url(),
                             AuditIssueSeverity.INFORMATION,
                             AuditIssueConfidence.CERTAIN,
                             null,
