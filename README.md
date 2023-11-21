@@ -44,7 +44,7 @@ This extension helps identify key information from requests to AWS Cognito, prov
 
 ## Download the Plugin
 
-See the packages section on the right hand side of this Github Repo. Look for `burpmontoyacognito-x.y.z-fatjar.jar`.
+See the packages section on the right hand side of this GitHub Repo. Look for `burpmontoyacognito-x.y.z-fatjar.jar`.
 
 ## How to build this plugin
 
@@ -91,7 +91,7 @@ $ ./gradlew fatJar
 1. Open Burp Suite
 2. Go to Extensions -> Installed -> Add
     - Extension Type: Java
-    - Extension file: build/libs/burpmontoyacognito-1.0-SNAPSHOT-fatjar.jar
+    - Extension file: build/libs/burpmontoyacognito-x.y.z-fatjar.jar
 
 ## Identity Pool Exploitation Reference
 
