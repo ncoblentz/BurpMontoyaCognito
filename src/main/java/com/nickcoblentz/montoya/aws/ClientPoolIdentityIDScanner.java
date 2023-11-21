@@ -51,12 +51,12 @@ public class ClientPoolIdentityIDScanner extends MyScanner {
                             clientIDs.add(parameter.value());
                         }
 
-                        if(parameter.name().equalsIgnoreCase("IdentityPoolId"))
+                        else if(parameter.name().equalsIgnoreCase("IdentityPoolId"))
                         {
                             identityPoolIDs.add(parameter.value());
                         }
 
-                        if(parameter.name().equalsIgnoreCase("UserPoolId"))
+                        else if(parameter.name().equalsIgnoreCase("UserPoolId"))
                         {
                             userPoolIDs.add(parameter.value());
                         }

@@ -47,12 +47,10 @@ public class CognitoShared {
     {
         String referer = "";
         if(requestNotNull(request)) {
-            if (request != null) {
                 referer = RequestHelper.GetHeaderValue(request, "Referer");
                 if (referer == null) {
                     referer = "";
                 }
-            }
         }
         return referer;
     }
@@ -70,7 +68,7 @@ public class CognitoShared {
 
     public static boolean requestNotNull(HttpRequestResponse baseRequestResponse)
     {
-        return baseRequestResponse!=null && baseRequestResponse!=null;
+        return baseRequestResponse!=null && baseRequestResponse.request()!=null;
     }
 
     public static boolean requestNotNull(HttpRequest request)
