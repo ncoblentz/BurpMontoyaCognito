@@ -48,36 +48,6 @@ See the packages section on the right hand side of this GitHub Repo. Look for `b
 
 ## How to build this plugin
 
-### Setup a GitHub Access Token
-
-#### Why
-
-Even though the Utility Package referenced by the build is public, Github still requires you to have an access token
-
-Here's the relevant content in my `build.gradle.kts` file
-```kotlin
-repositories {
-    mavenCentral()
-    maven {
-        url = uri("https://maven.pkg.github.com/ncoblentz/BurpMontoyaUtilities")
-        credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("GHUSERNAME")
-            password = project.findProperty("gpr.key") as String? ?: System.getenv("GHTOKEN")
-        }
-    }
-}
-```
-
-```kotlin
-dependencies {
-    implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
-```
-#### What to do
-
-1. Log into your personal github account and create an access token that can "Read Packages"
-2. `export GHUSERNAME="yourusernamehere"`
-3. `export GHTOKEN="youraccestokenhere"`
-
 ### Command-Line
 ```bash
 $ ./gradlew fatJar

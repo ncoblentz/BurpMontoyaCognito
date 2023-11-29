@@ -5,26 +5,26 @@ plugins {
 }
 
 group = "com.nickcoblentz.montoya.aws"
-version = "0.1.6"
+version = "0.1.7"
 
 
 //Run -> Edit Configuration -> Gradle-Build, Environment Variables: USERNAME and TOKEN
 repositories {
     mavenCentral()
-    maven {
+    /*maven {
         url = uri("https://maven.pkg.github.com/ncoblentz/BurpMontoyaUtilities")
         credentials {
             username = project.findProperty("gpr.user") as String? ?: System.getenv("GHUSERNAME")
             password = project.findProperty("gpr.key") as String? ?: System.getenv("GHTOKEN")
         }
-    }
+    }*/
 }
 
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("net.portswigger.burp.extensions:montoya-api:2023.10.3")
-    implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
+    //implementation("com.nickcoblentz.montoya.libraries:burpmontoyautilities:+")
     implementation("org.json:json:+")
 
 }
